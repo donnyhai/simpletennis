@@ -45,7 +45,11 @@ public class SimpleTennis extends ApplicationAdapter {
 	public void render () {
 		batch.begin();
 
-		this.calculateRacketMotionVectors();
+		this.executeHittings();
+		this.actualizeSpeedVectors();
+
+		/*
+		this.calculateRacketcurrentSpeeds();
 
 		game.ball.calculateCurrentMotionValues(this.globalTime);
 
@@ -61,7 +65,7 @@ public class SimpleTennis extends ApplicationAdapter {
 			double speed = game.p0.racket.getMotionSpeed();
 			//System.out.println("player0");
 			//game.ball.actualizeMotionEquations(game.ball.ballToRacketVector(game.p0.racket), this.globalTime);
-			double[] vec = new double[] {r * speed * game.p0.racket.motionVector[0], r * speed * game.p0.racket.motionVector[1]};
+			double[] vec = new double[] {r * speed * game.p0.racket.currentSpeed[0], r * speed * game.p0.racket.currentSpeed[1]};
 
 			if(counter == 0) {
 				System.out.println(vec[0] + " "  + vec[1]);
@@ -81,11 +85,12 @@ public class SimpleTennis extends ApplicationAdapter {
 			double speed = game.p1.racket.getMotionSpeed();
 			System.out.println("player1");
 			//game.ball.actualizeMotionEquations(game.ball.ballToRacketVector(game.p1.racket), this.globalTime);
-			double[] vec = new double[] {r * speed * game.p1.racket.motionVector[0], r * speed * game.p1.racket.motionVector[1]};
+			double[] vec = new double[] {r * speed * game.p1.racket.currentSpeed[0], r * speed * game.p1.racket.currentSpeed[1]};
 			game.ball.actualizeMotionEquations(vec, this.globalTime);
 
 		}
 
+		 */
 
 		if(game.ball.ballHitsWall(0, this.height)) {
 			game.ball.setCurrentPosition(new double[] {game.ball.currentPosition[0], game.ball.currentPosition[1]});
@@ -115,40 +120,39 @@ public class SimpleTennis extends ApplicationAdapter {
 		batch.draw(game.p1.racket.texture, (int) game.p1.racket.currentPosition[0] - r1, (int) game.p1.racket.currentPosition[1] - r1, 2 * r1, 2 * r1);
 	}
 
-	public void calculateRacketMotionVectors() {
+	public void actualizeRacketSpeedVectors() {
 		for(int i = 0; i < 2; i++) {
 			if(Gdx.input.isTouched(i)) {
 				int x = Gdx.input.getX(i);
 				int y = height - Gdx.input.getY(i);
-
 				if(x < width / 2) {
 					if(this.globalTime - this.game.p0.racket.saveTime > this.game.p0.racket.timeDelta) {
-						this.game.p0.racket.setCurrentPosition(this.game.p0.racket.nextPosition);
-						this.game.p0.racket.setNextPosition(new double[] {x,y});
-						this.game.p0.racket.actualizeMotionVector();
+						this.game.p0.racket.actualizeSpeedVector(new double[] {x,y});
 						this.game.p0.racket.saveTime = this.globalTime;
 					}
-
 				}
 				if(x > width / 2) {
 					if(this.globalTime - this.game.p1.racket.saveTime > this.game.p1.racket.timeDelta) {
-						this.game.p1.racket.setCurrentPosition(this.game.p1.racket.nextPosition);
-						this.game.p1.racket.setNextPosition(new double[] {x,y});
-						this.game.p1.racket.actualizeMotionVector();
+						this.game.p1.racket.actualizeSpeedVector(new double[] {x,y});
 						this.game.p1.racket.saveTime = this.globalTime;
-						//System.out.println("pos: " + this.game.p1.racket.currentPosition[0] + " " + this.game.p1.racket.currentPosition[1]);
-						//System.out.println("pos: " + this.game.p1.racket.motionVector[0] + " " + this.game.p1.racket.motionVector[1]);
-						//System.out.println("pos: " + this.game.p1.racket.getMotionSpeed());
 					}
 				}
-
 			}
 		}
-
 	}
 
 	@Override
 	public void dispose () {
 		batch.dispose();
 	}
+
+	public void actualizeSpeedVectors() {
+		this.actualizeRacketSpeedVectors();
+		this.game.ball.actualizeBallSpeedVector();
+	}
+
+	public void executeHittings() {
+
+	}
+
 }

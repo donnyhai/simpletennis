@@ -20,7 +20,7 @@ public class Game {
 
         this.ball.setInitialPosition(new double[] {width * 0.5, height * 0.5});
         this.ball.setCurrentPosition(this.ball.initialPosition);
-        this.ball.setAcceleration(new double[] {0, 0});
+        this.ball.setAcceleration(new double[] {-100, -100});
     }
 
 }
