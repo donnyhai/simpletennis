@@ -18,9 +18,10 @@ public class Game {
         this.p1.racket.setCurrentPosition(new double[] {width - 100, height * 0.5});
         this.p1.racket.setNextPosition(this.p1.racket.currentPosition);
 
-        this.ball.setInitialPosition(new double[] {width * 0.5, height * 0.5});
-        this.ball.setCurrentPosition(this.ball.initialPosition);
-        this.ball.setAcceleration(new double[] {-100, -100});
+        this.ball.setCurrentPosition(new double[] {width * 0.5, height * 0.5});
+        this.ball.setNextPosition(this.ball.currentPosition);
+        this.ball.setCurrentSpeed(new double[] {80, 45});
+        this.ball.setAcceleration(new double[] {10, 10});
     }
 
 }

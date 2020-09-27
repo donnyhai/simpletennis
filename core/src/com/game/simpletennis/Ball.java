@@ -7,10 +7,8 @@ public class Ball {
     Texture texture;
     int ballSize; //radius
 
-    double[] initialPosition = new double[2]; //initial position of the ball, every hit induces a new initial position for the next movement
     double[] currentPosition = new double[2]; //current position, center of the ball
     double[] nextPosition = new double[2];
-    double initialSpeed[] = {0,0};
     double currentSpeed[] = {0,0};
     double[] a = new double[2];
 
@@ -18,8 +16,10 @@ public class Ball {
     double timePassedSinceLastHit;
 
     double mass;
-    double impuls;
+    double impulse;
     double kinEnergy;
+
+    int counter = 0;
 
     public Ball(Texture texture, int ballSize) {
         this.texture = texture;
@@ -28,31 +28,33 @@ public class Ball {
         this.lastHitTime = 0;
     }
 
-    public void actualizeSpeedVector(double rate) {
+    //BASE METHODS
+
+    public void decelerateSpeed(double timeStep) {
         this.setCurrentPosition(this.nextPosition);
-        this.setNextPosition();
+        for(int i = 0; i < 2; i++) {
+            double speed_i = this.currentSpeed[i];
+            if(Math.abs(speed_i) > this.a[i] * timeStep) {
+                if (speed_i > 0) {
+                    this.currentSpeed[i] = speed_i - this.a[i] * timeStep;
+                }
+                else if (speed_i < 0) {
+                    this.currentSpeed[i] = speed_i + this.a[i] * timeStep;
+                }
+            }
+            else {
+                this.currentSpeed[i] = 0;
+            }
+        }
+        this.setNextPosition(new double[] {this.currentPosition[0] + this.currentSpeed[0], this.currentPosition[1] + this.currentSpeed[1]});
     }
 
-    //ball hits object and object induces addedSpeed on the ball
-    public void actualizeMotionEquations(double[] addedSpeed, double globalTime) {
-        this.initialPosition = this.currentPosition;
-        this.initialSpeed[0] = this.currentSpeed[0] + addedSpeed[0];
-        this.initialSpeed[1] = this.currentSpeed[1] + addedSpeed[1];
-        this.currentSpeed = this.initialSpeed;
-        this.lastHitTime = globalTime;
-        this.timePassedSinceLastHit = 0;
-    }
 
-    //actualize physical values of ball movement
-    public void calculateCurrentMotionValues(double globalTime) {
-        this.timePassedSinceLastHit  = globalTime - this.lastHitTime;
 
-        this.currentSpeed[0] = this.a[0] * this.timePassedSinceLastHit + this.initialSpeed[0];
-        this.currentSpeed[1] = this.a[1] * this.timePassedSinceLastHit + this.initialSpeed[1];
 
-        this.currentPosition[0] = 0.5 * this.a[0] * this.timePassedSinceLastHit * this.timePassedSinceLastHit + this.initialSpeed[0] * this.timePassedSinceLastHit + this.initialPosition[0];
-        this.currentPosition[1] = 0.5 * this.a[1] * this.timePassedSinceLastHit * this.timePassedSinceLastHit + this.initialSpeed[1] * this.timePassedSinceLastHit + this.initialPosition[1];
-    }
+
+
+    //RACKET HITTING
 
     public double[] ballToRacketVector(Racket racket) {
         return new double[] {this.currentPosition[0] - racket.currentPosition[0], this.currentPosition[1] - racket.currentPosition[1]};
@@ -62,15 +64,65 @@ public class Ball {
         return this.abs(this.ballToRacketVector(racket)) < racket.racketSize + this.ballSize;
     }
 
-    public boolean ballHitsGoal(int upX, int downX) {
-        if(this.currentPosition[0] - upX < this.ballSize) {
-            this.currentPosition[0] = upX + this.ballSize + 1;
-            return true;
-        }
-        else if (downX - this.currentPosition[0] < this.ballSize) {
-            this.currentPosition[0] = downX - this.ballSize - 1;
-            return true;
-        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //ACTUALIZE VALUES
+
+    public void actualizeCurrentSpeed() {
+        this.currentSpeed = new double[] {this.nextPosition[0] - this.currentPosition[0], this.nextPosition[1] - this.currentPosition[1]};
+    }
+
+    public void actualizeNextPosition() {
+        this.nextPosition = new double[] {this.currentPosition[0] + this.currentSpeed[0], this.currentPosition[1] + this.currentSpeed[1]};
+    }
+
+
+
+
+
+
+
+
+    //WALL AND GOAL HITTING
+
+    public boolean ballHitsGoal(int downX, int upX) {
+        return this.ballHitsDownGoal(downX) || this.ballHitsUpGoal(upX);
+    }
+
+    public boolean ballHitsUpGoal(int upX) {
+        if(upX - this.currentPosition[0] < this.ballSize) { return true; }
+        return false;
+    }
+
+    public boolean ballHitsDownGoal(int downX) {
+        if (this.currentPosition[0] - downX < this.ballSize) { return true; }
+        return false;
+    }
+
+    public boolean ballHitsWall(int downY, int upY) {
+        return this.ballHitsUpWall(upY) || this.ballHitsDownWall(downY);
+    }
+
+    public boolean ballHitsUpWall(int upY) {
+        if(upY - this.currentPosition[1] < this.ballSize) { return true; }
+        return false;
+    }
+
+    public boolean ballHitsDownWall(int downY) {
+        if (this.currentPosition[1] - downY < this.ballSize) { return true; }
         return false;
     }
 
@@ -81,26 +133,34 @@ public class Ball {
 
 
 
+    //SETTERS
 
-
-
-    public boolean ballHitsWall(int leftY, int rightY) {
-        if(this.currentPosition[1] - leftY < this.ballSize) {
-            this.currentPosition[1] = leftY + this.ballSize + 1;
-            return true;
-        }
-        else if (rightY - this.currentPosition[1] < this.ballSize) {
-            this.currentPosition[1] = rightY - this.ballSize - 1;
-            return true;
-        }
-        return false;
+    public void setCurrentPosition(double[] position) {
+        this.currentPosition = position;
+    }
+    public void setCurrentSpeed(double[] speed) {
+        this.currentSpeed = speed;
     }
 
+    public void setNextPosition(double[] position) {
+        this.nextPosition = position;
+    }
 
+    public void setImpulse(double impulse) {
+        this.impulse = impulse;
+    }
 
+    public void setMass(double mass) {
+        this.mass = mass;
+    }
 
+    public void setKinEnergy(double kinEnergy) {
+        this.kinEnergy = kinEnergy;
+    }
 
-
+    public void setAcceleration(double[] a) {
+        this.a = a;
+    }
 
 
 
@@ -109,26 +169,5 @@ public class Ball {
 
     public double abs(double[] vec) {
         return Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2));
-    }
-
-    public void setInitialPosition(double[] position) {
-        this.initialPosition = position;
-    }
-
-    public void setCurrentPosition(double[] position) {
-        this.currentPosition = position;
-    }
-    public void setNextPosition(double[] position) {
-        this.nextPosition = position;
-    }
-
-
-
-    public void setAcceleration(double[] a) {
-        this.a = a;
-    }
-
-    public void actualizeCurrentSpeed() {
-        this.currentSpeed = new double[] {this.nextPosition[0] - this.currentPosition[0], this.nextPosition[1] - this.currentPosition[1]};
     }
 }

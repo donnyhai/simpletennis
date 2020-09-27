@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-//Gdx.input.getX/getY and Gdx.graphics have origin top right (x down, y right)
-//batch.draw has origin top left (x down, y left)
+//Gdx.input.getX/getY and Gdx.graphics have origin top right (x down, y left)
+//batch.draw has origin top left (x down, y right)
 
 //DOCS
 //https://libgdx.badlogicgames.com/ci/nightlies/docs/api/com/badlogic/gdx/Input.html
@@ -23,15 +23,23 @@ public class SimpleTennis extends ApplicationAdapter {
 	int width;
 
 	double globalTime;
+	double timeStep = 0.02;
 
 	int counter = 0;
+
+	int upY, downY, upX, downX;
 	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 
-		width = Gdx.graphics.getWidth(); //here width is the longer side, height the shorter
+		width = Gdx.graphics.getWidth(); //here width is the longer side, height the shorter (width = 1794 height 1080 (Pixel 2 API 26))
 		height = Gdx.graphics.getHeight();
+
+		this.upY = height;
+		this.downY = 0;
+		this.upX = width;
+		this.downX = 0;
 
 		game = new Game(width, height);
 
@@ -45,80 +53,48 @@ public class SimpleTennis extends ApplicationAdapter {
 	public void render () {
 		batch.begin();
 
-		this.executeHittings();
+		//this.executeHittings();
 		this.actualizeSpeedVectors();
 
-		/*
-		this.calculateRacketcurrentSpeeds();
-
-		game.ball.calculateCurrentMotionValues(this.globalTime);
-
-		if (Gdx.input.justTouched()) {
-			System.out.println("ballpos: " + game.ball.currentPosition[0] + " " + game.ball.currentPosition[1]);
-			System.out.println("ballspeed: " + game.ball.currentSpeed[0] + " " + game.ball.currentSpeed[1]);
-			counter = 0;
-		}
-
-
-		if(game.ball.ballHitsRacket(game.p0.racket)) {
-			double r = game.p0.racket.speedRate;
-			double speed = game.p0.racket.getMotionSpeed();
-			//System.out.println("player0");
-			//game.ball.actualizeMotionEquations(game.ball.ballToRacketVector(game.p0.racket), this.globalTime);
-			double[] vec = new double[] {r * speed * game.p0.racket.currentSpeed[0], r * speed * game.p0.racket.currentSpeed[1]};
-
-			if(counter == 0) {
-				System.out.println(vec[0] + " "  + vec[1]);
-				counter += 1;
+		if(game.ball.ballHitsWall(this.downY, this.upY)) {
+			if(this.game.ball.ballHitsUpWall(this.upY)) {
+				this.game.ball.currentPosition[1] = this.upY - this.game.ball.ballSize - 1;
 			}
-
- 			game.ball.actualizeMotionEquations(vec, this.globalTime);
-
-			if(counter == 1) {
-				System.out.println("currentspeed: " + game.ball.currentSpeed[0] + " and " + game.ball.currentSpeed[1]);
-				counter += 1;
+			else if (this.game.ball.ballHitsDownWall(this.downY)) {
+				this.game.ball.currentPosition[1] = downY + this.game.ball.ballSize + 1;
 			}
+			this.game.ball.currentSpeed = new double[] {this.game.ball.currentSpeed[0], this.game.ball.currentSpeed[1] - 2 * game.ball.currentSpeed[1]};
+			this.game.ball.actualizeNextPosition();
+		}
+		if(game.ball.ballHitsGoal(this.downX, this.upX)) {
+			if(this.game.ball.ballHitsUpGoal(this.upX)) {
+				this.game.ball.currentPosition[0] = this.upX - this.game.ball.ballSize - 1;
+			}
+			else if (this.game.ball.ballHitsDownGoal(this.downX)) {
+				this.game.ball.currentPosition[0] = this.downX + this.game.ball.ballSize + 1;
+			}
+			this.game.ball.currentSpeed = new double[] {this.game.ball.currentSpeed[0] - 2 * game.ball.currentSpeed[0], this.game.ball.currentSpeed[1]};
+			this.game.ball.actualizeNextPosition();
+
 		}
 
-		if(game.ball.ballHitsRacket(game.p1.racket)) {
-			double r = game.p1.racket.speedRate;
-			double speed = game.p1.racket.getMotionSpeed();
-			System.out.println("player1");
-			//game.ball.actualizeMotionEquations(game.ball.ballToRacketVector(game.p1.racket), this.globalTime);
-			double[] vec = new double[] {r * speed * game.p1.racket.currentSpeed[0], r * speed * game.p1.racket.currentSpeed[1]};
-			game.ball.actualizeMotionEquations(vec, this.globalTime);
-
-		}
-
-		 */
-
-		if(game.ball.ballHitsWall(0, this.height)) {
-			game.ball.setCurrentPosition(new double[] {game.ball.currentPosition[0], game.ball.currentPosition[1]});
-			double vec[] = new double[] {0, -2 * game.ball.currentSpeed[1]};
-			game.ball.actualizeMotionEquations(vec, this.globalTime);
-		}
-
-		if(game.ball.ballHitsGoal(0, this.width)) {
-			double vec[] = new double[] {-2 * game.ball.currentSpeed[0], 0};
-			game.ball.actualizeMotionEquations(vec, this.globalTime);
-		}
-
-
-		this.globalTime += 0.02;
+		this.globalTime += this.timeStep;
 
 		draw(batch);
 		batch.end();
 	}
 
-	public void draw(SpriteBatch batch) {
-		int r0 = game.p0.racket.racketSize;
-		int r1 = game.p1.racket.racketSize;
-		int bs = game.ball.ballSize;
-		batch.draw(background, 0, 0, width, height);
-		batch.draw(game.ball.texture, (int) game.ball.currentPosition[0] - bs, (int) game.ball.currentPosition[1] - bs, 2 * bs, 2 * bs);
-		batch.draw(game.p0.racket.texture, (int) game.p0.racket.currentPosition[0] - r0, (int) game.p0.racket.currentPosition[1] - r0, 2 * r0, 2 * r0);
-		batch.draw(game.p1.racket.texture, (int) game.p1.racket.currentPosition[0] - r1, (int) game.p1.racket.currentPosition[1] - r1, 2 * r1, 2 * r1);
+
+	public void executeHittings() {
+
 	}
+
+
+	public void actualizeSpeedVectors() {
+		this.actualizeRacketSpeedVectors();
+		this.game.ball.decelerateSpeed(this.timeStep);
+	}
+
 
 	public void actualizeRacketSpeedVectors() {
 		for(int i = 0; i < 2; i++) {
@@ -141,18 +117,21 @@ public class SimpleTennis extends ApplicationAdapter {
 		}
 	}
 
+
+	public void draw(SpriteBatch batch) {
+		int r0 = game.p0.racket.racketSize;
+		int r1 = game.p1.racket.racketSize;
+		int bs = game.ball.ballSize;
+		batch.draw(background, 0, 0, width, height);
+		batch.draw(game.ball.texture, (int) game.ball.currentPosition[0] - bs, (int) game.ball.currentPosition[1] - bs, 2 * bs, 2 * bs);
+		batch.draw(game.p0.racket.texture, (int) game.p0.racket.currentPosition[0] - r0, (int) game.p0.racket.currentPosition[1] - r0, 2 * r0, 2 * r0);
+		batch.draw(game.p1.racket.texture, (int) game.p1.racket.currentPosition[0] - r1, (int) game.p1.racket.currentPosition[1] - r1, 2 * r1, 2 * r1);
+	}
+
+
 	@Override
 	public void dispose () {
 		batch.dispose();
-	}
-
-	public void actualizeSpeedVectors() {
-		this.actualizeRacketSpeedVectors();
-		this.game.ball.actualizeBallSpeedVector();
-	}
-
-	public void executeHittings() {
-
 	}
 
 }
