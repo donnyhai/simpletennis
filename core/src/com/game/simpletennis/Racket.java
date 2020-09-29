@@ -12,7 +12,7 @@ public class Racket {
     double nextPosition[] = {0,0}; //save next position
     double currentSpeed[] = {0,0};
 
-    double timeDelta = 0.03; //time between currentPosition and nextPosition
+    double timeDelta = 0.003; //time between currentPosition and nextPosition
 
     int racketSize; //radius
     double saveTime = 0;

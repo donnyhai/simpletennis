@@ -57,11 +57,15 @@ public class Ball {
     //RACKET HITTING
 
     public double[] ballToRacketVector(Racket racket) {
-        return new double[] {this.currentPosition[0] - racket.currentPosition[0], this.currentPosition[1] - racket.currentPosition[1]};
+        return new double[] {racket.currentPosition[0] - this.currentPosition[0], racket.currentPosition[1] - this.currentPosition[1]};
     }
 
     public boolean ballHitsRacket(Racket racket) {
         return this.abs(this.ballToRacketVector(racket)) < racket.racketSize + this.ballSize;
+    }
+
+    public boolean posNearBall(double[] pos, int add_distance) {
+        return this.abs(new double[] {this.currentPosition[0] - pos[0], this.currentPosition[1] - pos[1]}) < this.ballSize + add_distance;
     }
 
 

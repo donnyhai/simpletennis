@@ -55,28 +55,10 @@ public class SimpleTennis extends ApplicationAdapter {
 
 		//this.executeHittings();
 		this.actualizeSpeedVectors();
+		this.executeWallHittings();
 
-		if(game.ball.ballHitsWall(this.downY, this.upY)) {
-			if(this.game.ball.ballHitsUpWall(this.upY)) {
-				this.game.ball.currentPosition[1] = this.upY - this.game.ball.ballSize - 1;
-			}
-			else if (this.game.ball.ballHitsDownWall(this.downY)) {
-				this.game.ball.currentPosition[1] = downY + this.game.ball.ballSize + 1;
-			}
-			this.game.ball.currentSpeed = new double[] {this.game.ball.currentSpeed[0], this.game.ball.currentSpeed[1] - 2 * game.ball.currentSpeed[1]};
-			this.game.ball.actualizeNextPosition();
-		}
-		if(game.ball.ballHitsGoal(this.downX, this.upX)) {
-			if(this.game.ball.ballHitsUpGoal(this.upX)) {
-				this.game.ball.currentPosition[0] = this.upX - this.game.ball.ballSize - 1;
-			}
-			else if (this.game.ball.ballHitsDownGoal(this.downX)) {
-				this.game.ball.currentPosition[0] = this.downX + this.game.ball.ballSize + 1;
-			}
-			this.game.ball.currentSpeed = new double[] {this.game.ball.currentSpeed[0] - 2 * game.ball.currentSpeed[0], this.game.ball.currentSpeed[1]};
-			this.game.ball.actualizeNextPosition();
 
-		}
+
 
 		this.globalTime += this.timeStep;
 
@@ -101,19 +83,57 @@ public class SimpleTennis extends ApplicationAdapter {
 			if(Gdx.input.isTouched(i)) {
 				int x = Gdx.input.getX(i);
 				int y = height - Gdx.input.getY(i);
-				if(x < width / 2) {
+				double pos[] = {x,y};
+				if(x < width / 2 - this.game.p0.racket.racketSize) {
 					if(this.globalTime - this.game.p0.racket.saveTime > this.game.p0.racket.timeDelta) {
-						this.game.p0.racket.actualizeSpeedVector(new double[] {x,y});
+						if(this.game.ball.posNearBall(pos, this.game.p0.racket.racketSize)) {
+							//execute hitting
+							double[] vec = this.game.ball.ballToRacketVector(this.game.p0.racket);
+							this.game.p0.racket.setCurrentPosition(new double[] {this.game.ball.currentPosition[0] + vec[0], this.game.ball.currentPosition[1] + vec[1]});
+						}
+						else {
+							this.game.p0.racket.actualizeSpeedVector(pos);
+						}
 						this.game.p0.racket.saveTime = this.globalTime;
 					}
 				}
-				if(x > width / 2) {
+				if(x > width / 2 + this.game.p1.racket.racketSize) {
 					if(this.globalTime - this.game.p1.racket.saveTime > this.game.p1.racket.timeDelta) {
-						this.game.p1.racket.actualizeSpeedVector(new double[] {x,y});
+						if(this.game.ball.posNearBall(pos, this.game.p1.racket.racketSize)) {
+							//execute hitting
+							double[] vec = this.game.ball.ballToRacketVector(this.game.p1.racket);
+							this.game.p1.racket.setCurrentPosition(new double[] {this.game.ball.currentPosition[0] + vec[0], this.game.ball.currentPosition[1] + vec[1]});
+						}
+						else {
+							this.game.p1.racket.actualizeSpeedVector(pos);
+						}
 						this.game.p1.racket.saveTime = this.globalTime;
 					}
 				}
 			}
+		}
+	}
+
+	public void executeWallHittings() {
+		if(game.ball.ballHitsWall(this.downY, this.upY)) {
+			if(this.game.ball.ballHitsUpWall(this.upY)) {
+				this.game.ball.currentPosition[1] = this.upY - this.game.ball.ballSize - 1;
+			}
+			else if (this.game.ball.ballHitsDownWall(this.downY)) {
+				this.game.ball.currentPosition[1] = downY + this.game.ball.ballSize + 1;
+			}
+			this.game.ball.currentSpeed = new double[] {this.game.ball.currentSpeed[0], this.game.ball.currentSpeed[1] - 2 * game.ball.currentSpeed[1]};
+			this.game.ball.actualizeNextPosition();
+		}
+		if(game.ball.ballHitsGoal(this.downX, this.upX)) {
+			if(this.game.ball.ballHitsUpGoal(this.upX)) {
+				this.game.ball.currentPosition[0] = this.upX - this.game.ball.ballSize - 1;
+			}
+			else if (this.game.ball.ballHitsDownGoal(this.downX)) {
+				this.game.ball.currentPosition[0] = this.downX + this.game.ball.ballSize + 1;
+			}
+			this.game.ball.currentSpeed = new double[] {this.game.ball.currentSpeed[0] - 2 * game.ball.currentSpeed[0], this.game.ball.currentSpeed[1]};
+			this.game.ball.actualizeNextPosition();
 		}
 	}
 
